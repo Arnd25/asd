@@ -1,22 +1,25 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsNumber } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { Status } from '@prisma/client';
+
+class OrderDish {
+  @ApiProperty()
+  dishId: number;
+  @ApiProperty()
+  amount: number;
+}
 
 export class CreateOrderDto {
-  @IsNotEmpty()
-  @IsString()
-  title: string;
-  @IsNotEmpty()
-  @IsString()
-  status: string;
-  @IsOptional()
+  @ApiProperty()
   @IsNumber()
-  table: number;
-  @IsNumber()
-  @Min(1)
-  amount: number;
+  table?: number;
+  @ApiProperty({
+    enum: Status,
+  })
+  @IsEnum(Status)
+  status: Status;
+  @ApiProperty({
+    type: [OrderDish],
+  })
+  OrderDishes: OrderDish[];
 }

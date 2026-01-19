@@ -1,32 +1,58 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { DishStatus, Status } from '@prisma/client';
 
 @Injectable()
-export class OrderService {
+class OrderService {
   constructor(private prisma: PrismaService) {}
-  create(createOrderDto: CreateOrderDto) {
-    return this.prisma.order.create({ data: createOrderDto });
+  async create(createOrderDto: CreateOrderDto) {
+    const data = await this.prisma.order.create({
+      include: {
+        OrderDishes: true,
+      },
+      data: {
+        table: createOrderDto.table,
+        OrderDishes: {
+          createMany: {
+            data: createOrderDto.OrderDishes.map((dish) => ({
+              dishId: dish.dishId,
+              amount: dish.amount,
+              status: Status.Pending,
+            })),
+          },
+        },
+      },
+    });
+    return data;
   }
 
   findAll() {
     return this.prisma.order.findMany({ where: { deletedAt: null } });
   }
 
-  async findOne(id: number) {
-    const order = await this.prisma.order.findUnique({
-      where: { id, deletedAt: null },
+  findOne(id: number) {
+    const order = this.prisma.order.findUnique({
+      where: { id },
     });
-    if (!order) {
-      throw new NotFoundException(`Order with this id is not found`);
-    }
     return order;
   }
 
-  async update(id: number, updateOrderDto: UpdateOrderDto) {
-    await this.findOne(id);
-    return this.prisma.order.update({ where: { id }, data: updateOrderDto });
+  update(id: number, updateOrderDto: UpdateOrderDto) {
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        table: updateOrderDto.table,
+        OrderDishes: {
+          create: updateOrderDto.OrderDishes?.map((dish) => ({
+            dishId: dish.dishId,
+            status: DishStatus.Pending,
+            amount: dish.amount,
+          })),
+        },
+      },
+    });
   }
 
   remove(id: number) {
@@ -36,3 +62,5 @@ export class OrderService {
     });
   }
 }
+
+export default OrderService;
