@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { DishStatus, Status } from '@prisma/client';
+import { Status } from '@prisma/client';
 
 @Injectable()
 class OrderService {
@@ -25,32 +25,53 @@ class OrderService {
         },
       },
     });
-    return data;
+    return {
+      table: data.table,
+      OrderDishes: data.OrderDishes.map((dish) => ({
+        dishId: dish.dishId,
+        orderId: dish.orderId,
+        amount: dish.amount,
+      })),
+    };
   }
 
-  findAll() {
-    return this.prisma.order.findMany({ where: { deletedAt: null } });
-  }
-
-  findOne(id: number) {
-    const order = this.prisma.order.findUnique({
-      where: { id },
+  async findAll() {
+    const data = await this.prisma.order.findMany({
+      where: { deletedAt: null },
+      include: { OrderDishes: true },
     });
-    return order;
+    return data.map((order) => ({
+      table: order.table,
+      OrderDishes: order.OrderDishes.map((dish) => ({
+        orderId: dish.orderId,
+        dishId: dish.dishId,
+        amount: dish.amount,
+      })),
+    }));
+  }
+
+  async findOne(id: number) {
+    const data = await this.prisma.order.findUnique({
+      where: { id, deletedAt: null },
+      include: { OrderDishes: true },
+    });
+    if (!data) throw new NotFoundException('Order not found');
+    return {
+      table: data.table || null,
+      OrderDishes: data.OrderDishes.map((dish) => ({
+        dishId: dish.dishId,
+        orderId: dish.orderId,
+        amount: dish.amount,
+      })),
+    };
   }
 
   update(id: number, updateOrderDto: UpdateOrderDto) {
     return this.prisma.order.update({
       where: { id },
+      include: { OrderDishes: true },
       data: {
         table: updateOrderDto.table,
-        OrderDishes: {
-          create: updateOrderDto.OrderDishes?.map((dish) => ({
-            dishId: dish.dishId,
-            status: DishStatus.Pending,
-            amount: dish.amount,
-          })),
-        },
       },
     });
   }
