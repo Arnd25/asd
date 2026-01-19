@@ -1,22 +1,8 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `amount` on the `Order` table. All the data in the column will be lost.
-  - You are about to drop the column `status` on the `Order` table. All the data in the column will be lost.
-  - You are about to drop the column `title` on the `Order` table. All the data in the column will be lost.
-  - You are about to drop the `Dishes` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
-CREATE TYPE "Status" AS ENUM ('Peding', 'Prepare', 'ready', 'in_delivery', 'completed');
+CREATE TYPE "Status" AS ENUM ('Pending', 'Prepare', 'Ready', 'InDelivery', 'Completed');
 
--- AlterTable
-ALTER TABLE "Order" DROP COLUMN "amount",
-DROP COLUMN "status",
-DROP COLUMN "title";
-
--- DropTable
-DROP TABLE "Dishes";
+-- CreateEnum
+CREATE TYPE "DishStatus" AS ENUM ('Pending', 'Prepare', 'Completed');
 
 -- CreateTable
 CREATE TABLE "Dish" (
@@ -32,15 +18,26 @@ CREATE TABLE "Dish" (
 );
 
 -- CreateTable
+CREATE TABLE "Order" (
+    "id" SERIAL NOT NULL,
+    "table" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "OrderDishes" (
     "id" SERIAL NOT NULL,
     "order_id" INTEGER NOT NULL,
     "dish_id" INTEGER NOT NULL,
     "amount" INTEGER NOT NULL,
-    "status" "Status" NOT NULL DEFAULT 'Peding',
+    "status" "DishStatus" NOT NULL DEFAULT 'Pending',
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "canceledAt" TIMESTAMP(3),
-    "readyAt" TIMESTAMP(3) NOT NULL,
+    "readyAt" TIMESTAMP(3),
 
     CONSTRAINT "OrderDishes_pkey" PRIMARY KEY ("id")
 );
