@@ -9,6 +9,15 @@ async function bootstrap() {
     .setTitle('Cats example')
     .setDescription('The cats API description')
     .setVersion('1.0')
+    .addBearerAuth(
+      // ← Добавляем схему Bearer
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT', // можно указать формат
+      },
+      'access-token', // ← Это имя схемы, которое нужно использовать в @ApiBearerAuth()
+    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

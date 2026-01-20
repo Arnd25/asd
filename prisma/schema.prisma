@@ -63,3 +63,16 @@ model OrderDishes {
   Order Order @relation(references: [id], fields: [orderId])
   Dish  Dish  @relation(references: [id], fields: [dishId])
 }
+
+enum Roles {
+  Admin
+  User
+}
+
+model User {
+  userId   String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+  role     Roles  @default(User)
+}

@@ -8,14 +8,18 @@ import {
   Delete,
   ParseIntPipe,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import OrderService from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderPresenter } from './dto/order-presenter';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('order')
+@UseGuards(AuthGuard)
+@ApiBearerAuth('access-token')
 class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
