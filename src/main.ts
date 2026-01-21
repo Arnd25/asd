@@ -14,9 +14,9 @@ async function bootstrap() {
       {
         type: 'http',
         scheme: 'bearer',
-        bearerFormat: 'JWT', // можно указать формат
+        bearerFormat: 'JWT',
       },
-      'access-token', // ← Это имя схемы, которое нужно использовать в @ApiBearerAuth()
+      'access-token',
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
