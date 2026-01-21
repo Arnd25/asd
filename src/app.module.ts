@@ -1,14 +1,37 @@
 import { Module } from '@nestjs/common';
-
-import { PrismaModule } from './prisma/prisma.module';
-import { OrderModule } from './order/order.module';
-import { DishModule } from './dish/dish.module';
-import { OrderDishesModule } from './order-dishes/order-dishes.module';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { PrismaModule } from './modules/prisma/prisma.module';
+import { envConfig } from './common/config/env.config';
+import { AuthModule } from './modules/auth/auth.module';
+import * as path from 'path';
+import * as process from 'node:process';
 
 @Module({
-  imports: [PrismaModule, OrderModule, DishModule, OrderDishesModule, AuthModule, UserModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envConfig.validationSchema,
+    }),
+    ServeStaticModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const uploadDir = configService.get<string>('UPLOAD_DIR') || 'uploads';
+        const absolutePath = path.join(process.cwd(), uploadDir);
+
+        return [
+          {
+            rootPath: absolutePath,
+            serveRoot: '/uploads',
+            serveStaticOptions: { index: false },
+          },
+        ];
+      },
+    }),
+    PrismaModule,
+    AuthModule,
+  ],
   controllers: [],
   providers: [],
 })
