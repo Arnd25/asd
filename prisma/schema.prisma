@@ -3,13 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+enum Status {
+  pending
+  ready
+  completed
+  cancelled
 }
 
 model User {
@@ -20,44 +27,41 @@ model User {
   refreshToken String? @map("refresh_token")
   role         Role    @default(USER)
 
-  news News[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("users")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Category {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model Dish {
+  id          Int    @id @default(autoincrement())
+  title       String @unique
+  description String
 
-  title    String
-  slug     String  @unique
-  isActive Boolean @default(false) @map("is_active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  news News[]
-
-  @@map("categories")
+  orderDishes OrderDish[]
 }
 
-model News {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model Order {
+  id          Int         @id @default(autoincrement())
+  table       Int
+  status      Status      @default(pending)
+  orderDishes OrderDish[]
 
-  title    String
-  slug     String  @unique
-  content  String
-  imageUrl String? @map("image_url")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
 
-  isActive Boolean @default(false) @map("is_active")
+model OrderDish {
+  id      Int @id @default(autoincrement())
+  orderId Int
+  dishId  Int
+  amount  Int
 
-  category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId String?   @map("category_id")
-  user       User?     @relation(fields: [userId], references: [id])
-  userId     String?   @map("user_id")
+  order Order @relation(fields: [orderId], references: [id])
+  dish  Dish  @relation(fields: [dishId], references: [id])
 
-  @@map("news")
+  @@unique([orderId, dishId])
 }

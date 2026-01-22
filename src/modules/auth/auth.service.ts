@@ -198,7 +198,7 @@ export class AuthService {
       httpOnly: true,
       secure: isSecure,
       sameSite: sameSite,
-      path: '/api/auth/refresh',
+      path: '/',
       maxAge: this.parseDuration(
         this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d',
       ),
@@ -207,7 +207,7 @@ export class AuthService {
 
   private clearTokenCookies(res: Response) {
     res.clearCookie('access_token', { path: '/' });
-    res.clearCookie('refresh_token', { path: '/api/auth/refresh' });
+    res.clearCookie('refresh_token', { path: '/' });
   }
 
   private parseDuration(duration: string): number {
